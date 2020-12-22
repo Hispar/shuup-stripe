@@ -19,6 +19,6 @@ class StripeTokenForm(forms.Form):
     def clean(self):
         data = super(StripeTokenForm, self).clean()
         if not (data.get("stripeToken") or data.get("stripeCustomer")):
-            raise forms.ValidationError(_("Either token or curstomer should be informed."))
+            raise forms.ValidationError(_("Either token or customer should be informed."))
 
         return data

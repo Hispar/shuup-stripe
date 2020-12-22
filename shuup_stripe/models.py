@@ -30,7 +30,7 @@ class StripeCheckoutPaymentProcessor(PaymentProcessor):
             for stripe_charger in stripe_chargers:
                 if stripe_charger.identifier == service.choice_identifier:
                     charger = stripe_charger(order=order, secret_key=self.secret_key)
-                    charger.create_charge()
+                    charger.create_payment_intent()
 
 
 class StripeCustomer(models.Model):

@@ -5,6 +5,7 @@
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import stripe
 from django.utils.translation import ugettext as _
 from shuup.utils.excs import Problem
 
@@ -46,27 +47,34 @@ class StripeCharger(object):
 
         input_data.update(get_amount_info(self.order.taxful_total_price))
 
-        from shuup.utils.http import retry_request
-        return retry_request(
-            method="post",
-            url="https://api.stripe.com/v1/charges",
-            data=input_data,
-            auth=(self.secret_key, ""),
-            headers={
-                "Idempotency-Key": self.order.key,
-                "Stripe-Version": "2015-04-07"
-            }
+        stripe.api_key = self.secret_key
+        return stripe.PaymentIntent.create(
+            **input_data,
+            confirm=True,
+            payment_method_types=["card"],
         )
+        # from shuup.utils.http import retry_request
+        # return retry_request(
+        #     method="post",
+        #     url="https://api.stripe.com/v1/charges",
+        #     data=input_data,
+        #     auth=(self.secret_key, ""),
+        #     headers={
+        #         "Idempotency-Key": self.order.key,
+        #         "Stripe-Version": "2015-04-07"
+        #     }
+        # )
 
-    def create_charge(self):
+    def create_payment_intent(self):
         resp = self._send_request()
-        charge_data = resp.json() if hasattr(resp, "json") else resp
-        _handle_stripe_error(charge_data)
-        if not charge_data.get("paid"):
-            raise Problem(_("Stripe Charge does not say 'paid'"))
+        payment_intent_data = resp.json() if hasattr(resp, "json") else resp
+        _handle_stripe_error(payment_intent_data)
+        status =payment_intent_data.get("status", False)
+        if not status or 'status' != 'succeeded':
+            raise Problem(_("Stripe status is not 'succeeded'"))
 
         return self.order.create_payment(
             self.order.taxful_total_price,
-            payment_identifier="Stripe-%s" % charge_data["id"],
-            description=_("Stripe Charge")
+            payment_identifier="Stripe-%s" % payment_intent_data["id"],
+            description=_("Stripe Payment Intent")
         )

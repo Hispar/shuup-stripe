@@ -38,7 +38,7 @@ def test_stripe_basics(rf, stripe_payment_processor):
     :type rf: RequestFactory
     :type stripe_payment_module: StripeCheckoutModule
     """
-    with mock.patch("shuup.utils.http.retry_request") as mocked:
+    with mock.patch("stripe.PaymentIntent.create") as mocked:
         mocked.return_value = StripedData(paid=True, id="1234")
 
         order = create_order_for_stripe(stripe_payment_processor)
@@ -55,21 +55,21 @@ def test_stripe_basics(rf, stripe_payment_processor):
 
 @pytest.mark.django_db
 def test_stripe_bogus_data_fails(rf, stripe_payment_processor):
-    with mock.patch("shuup.utils.http.retry_request") as mocked:
+    with mock.patch("stripe.PaymentIntent.create") as mocked:
         mocked.return_value = StripedData()
 
         order = create_order_for_stripe(stripe_payment_processor)
         with pytest.raises(Problem):
             stripe_payment_processor.process_payment_return_request(order.payment_method, order, rf.post("/"))
 
-    with mock.patch("shuup.utils.http.retry_request") as mocked:
+    with mock.patch("stripe.PaymentIntent.create") as mocked:
         mocked.return_value = StripedData(error=dict(type="error1", message="failed"))
 
         order = create_order_for_stripe(stripe_payment_processor)
         with pytest.raises(Problem):
             stripe_payment_processor.process_payment_return_request(order.payment_method, order, rf.post("/"))
 
-    with mock.patch("shuup.utils.http.retry_request") as mocked:
+    with mock.patch("stripe.PaymentIntent.create") as mocked:
         mocked.return_value = StripedData(failure_message="failed", failure_code="0xf2")
         order = create_order_for_stripe(stripe_payment_processor)
         with pytest.raises(Problem):
@@ -104,7 +104,7 @@ def test_stripe_checkout_phase(rf):
 
 @pytest.mark.django_db
 def test_stripe_process_order(rf):
-    with mock.patch("shuup.utils.http.retry_request") as mocked:
+    with mock.patch("stripe.PaymentIntent.create") as mocked:
         mocked.return_value = StripedData(paid=True, id="1234")
 
         request = rf.post("/")
