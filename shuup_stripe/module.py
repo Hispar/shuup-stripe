@@ -50,20 +50,8 @@ class StripeCharger(object):
         stripe.api_key = self.secret_key
         return stripe.PaymentIntent.create(
             **input_data,
-            confirm=True,
             payment_method_types=["card"],
         )
-        # from shuup.utils.http import retry_request
-        # return retry_request(
-        #     method="post",
-        #     url="https://api.stripe.com/v1/charges",
-        #     data=input_data,
-        #     auth=(self.secret_key, ""),
-        #     headers={
-        #         "Idempotency-Key": self.order.key,
-        #         "Stripe-Version": "2015-04-07"
-        #     }
-        # )
 
     def create_payment_intent(self):
         resp = self._send_request()
