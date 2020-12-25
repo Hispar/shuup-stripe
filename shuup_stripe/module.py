@@ -32,16 +32,25 @@ class StripeCharger(object):
         self.secret_key = secret_key
         self.order = order
 
-    def _send_request(self):
+    def _fetch_source(self):
         stripe_token = self.order.payment_data["stripe"].get("token")
+        input_data = {}
+        if stripe_token:
+            input_data["token"] = stripe_token
+
+        stripe.api_key = self.secret_key
+        return stripe.Source.create(**input_data)
+
+    def _send_request(self):
+        stripe_source = self._fetch_source()
         stripe_customer = self.order.payment_data["stripe"].get("customer")
         input_data = {
             "description": _("Payment for order {id} on {shop}").format(
                 id=self.order.identifier, shop=self.order.shop,
             )
         }
-        if stripe_token:
-            input_data["source"] = stripe_token
+        if stripe_source:
+            input_data["source"] = stripe_source["id"]
         elif stripe_customer:
             input_data["customer"] = stripe_customer
 
@@ -57,7 +66,7 @@ class StripeCharger(object):
         resp = self._send_request()
         payment_intent_data = resp.json() if hasattr(resp, "json") else resp
         _handle_stripe_error(payment_intent_data)
-        status =payment_intent_data.get("status", False)
+        status = payment_intent_data.get("status", False)
         if not status or 'status' != 'succeeded':
             raise Problem(_("Stripe status is not 'succeeded'"))
 
