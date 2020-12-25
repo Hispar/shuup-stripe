@@ -25,7 +25,7 @@
             var stripe = Stripe('{{ stripe.publishable_key }}')
             // Disable the button until we have Stripe set up on the page
             document.querySelector('button').disabled = true
-            fetch('/customer/create-payment-intent', {
+            fetch('/customer/create-payment-intent/', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
