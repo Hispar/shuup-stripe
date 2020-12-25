@@ -34,7 +34,9 @@ class StripeCharger(object):
 
     def _fetch_source(self):
         stripe_token = self.order.payment_data["stripe"].get("token")
-        input_data = {}
+        input_data = {
+            "type": "card"
+        }
         if stripe_token:
             input_data["token"] = stripe_token
 
