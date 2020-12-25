@@ -85,9 +85,10 @@ class StripeSavedPaymentInfoView(DashboardViewMixin, TemplateView):
 
 
 class StripeCreatePaymentIntentView(View):
-
     def post(self, request, *args, **kwargs):
+        stripe_processor = get_stripe_processor(request)
         try:
+            stripe.api_key = stripe_processor.secret_key
             intent = stripe.PaymentIntent.create(
                 **get_amount_info(self.request.basket.taxful_total_price)
             )

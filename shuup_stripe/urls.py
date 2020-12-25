@@ -15,7 +15,8 @@ urlpatterns = [
         r"^customer/save-payment-info/$",
         login_required(views.StripeSavedPaymentInfoView.as_view()),
         name="stripe_saved_payment"
-    ),url(
+    ),
+    url(
         r"^customer/create-payment-intent/$",
         login_required(views.StripeCreatePaymentIntentView.as_view()),
         name="stripe_create_payment_intent"
