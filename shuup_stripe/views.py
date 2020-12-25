@@ -10,7 +10,7 @@ from logging import getLogger
 import stripe
 from django.contrib import messages
 from django.http import Http404
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.encoding import force_text
@@ -82,6 +82,22 @@ class StripeSavedPaymentInfoView(DashboardViewMixin, TemplateView):
                 pass
 
         return context
+
+
+class StripeCreatePaymentIntentView(View):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            intent = stripe.PaymentIntent.create(
+                **get_amount_info(self.request.basket.taxful_total_price)
+            )
+            return JsonResponse({
+                'clientSecret': intent['client_secret']
+            })
+        except Exception as e:
+            LOGGER.exception("Failed to create Stripe payment intent")
+            messages.error(request, _("Unknown error while creating payment intent."))
+            return JsonResponse(data=str(e), status_code=403)
 
 
 class StripeDeleteSavedPaymentInfoView(View):
