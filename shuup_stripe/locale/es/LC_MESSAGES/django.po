@@ -1,0 +1,223 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-05-27 07:03+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Missing to email for the payment link."
+msgstr "Falta el email para el enlace de pago"
+
+msgid "Payment link send!"
+msgstr "Enlace de pago enviado"
+
+msgid "Stripe Payments"
+msgstr ""
+
+msgid "Checkout payment phase message"
+msgstr ""
+
+msgid "Set a custom message to use in checkout payment phase."
+msgstr ""
+
+msgid "Checkout card details message"
+msgstr ""
+
+msgid "Set a custom message to use in card details option when doing checkout."
+msgstr ""
+
+msgid "Checkout saved card message"
+msgstr ""
+
+msgid "Set a custom message to use in saved card option when doing checkout."
+msgstr ""
+
+msgid "Saved card message"
+msgstr ""
+
+msgid "Set a custom message for the saved card section in customer dashboard."
+msgstr ""
+
+msgid "Checkout phase title"
+msgstr ""
+
+msgid "Set a custom title for the checkout phase."
+msgstr ""
+
+msgid "Either token or curstomer should be informed."
+msgstr ""
+
+#, python-format
+msgid "Please configure Stripe keys for payment processor %s."
+msgstr ""
+
+msgid "Purchase"
+msgstr ""
+
+msgid "Saved Card"
+msgstr ""
+
+msgid "Secret Key"
+msgstr ""
+
+msgid "Publishable Key"
+msgstr ""
+
+msgid "contact"
+msgstr ""
+
+msgid "Stripe customer ID"
+msgstr ""
+
+msgid "Stripe Customer"
+msgstr ""
+
+msgid "Stripe Customers"
+msgstr ""
+
+#, python-format
+msgid "Stripe: %(failure_message)s (%(failure_code)s)"
+msgstr ""
+
+msgid "Stripe Checkout"
+msgstr ""
+
+#, python-brace-format
+msgid "Payment for order {id} on {shop}"
+msgstr ""
+
+msgid "Stripe Charge does not say 'paid'"
+msgstr ""
+
+msgid "Stripe Charge"
+msgstr ""
+
+msgid "Send Stripe Payment Link"
+msgstr ""
+
+msgid "This event is triggered manually from order."
+msgstr ""
+
+msgid "Order"
+msgstr ""
+
+msgid "Customer Email"
+msgstr ""
+
+msgid "URL to Stripe payment link"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Stripe Payment"
+msgstr ""
+
+msgid "Click the button below to enter your card details."
+msgstr "Pulse en boton inferior para introducir los datos de su tarjeta"
+
+msgid "Use saved card details by clicking button below:"
+msgstr ""
+
+#, python-brace-format
+msgid "Pay with {brand} **** {last4}"
+msgstr "Pagar con {brand} **** {last4}"
+
+#, python-brace-format
+msgid "Pay with {funding} {object}"
+msgstr ""
+
+msgid ""
+"We use Stripe for secure payment handling. You will only be charged when "
+"your order completes."
+msgstr "Usamos Stripe para el pago seguro. Solo se efectuara el cargo cuando la orden este completa. Los datos de tu tarjeta nunca pasaran por nuestros servidores"
+
+msgid "Payment"
+msgstr ""
+
+msgid "We use Stripe for secure payment handling."
+msgstr "Usamos Stripe para el pago seguro."
+
+msgid "You can see the order details below."
+msgstr ""
+
+#, python-format
+msgid ""
+"Payment link is sent to order billing address email: <strong>%(email)s</"
+"strong>."
+msgstr ""
+
+msgid "Send Payment Link"
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Dashboard"
+msgstr ""
+
+msgid ""
+"Save your card details for a faster checkout. You can change or delete it at "
+"any time."
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Expires"
+msgstr ""
+
+msgid "Number"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Change payment details"
+msgstr ""
+
+msgid "Add payment details"
+msgstr ""
+
+msgid "Save payment details"
+msgstr ""
+
+msgid "Stripe Configuration"
+msgstr ""
+
+#, python-format
+msgid "Accept credit cards using <a target='_blank' href='%(url)s'>Stripe</a>"
+msgstr ""
+
+msgid "Don't have a Stripe account?"
+msgstr ""
+
+msgid "Register now"
+msgstr ""
+
+msgid "Payment details successfully saved."
+msgstr ""
+
+msgid "Error while saving payment details."
+msgstr ""
+
+msgid "Unknown error while removing payment details."
+msgstr ""
+
+msgid "Payment successfully removed."
+msgstr ""
+
+msgid "Error in the payment data. Please re-submit the payment."
+msgstr ""

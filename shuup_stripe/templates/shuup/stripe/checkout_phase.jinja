@@ -2,10 +2,10 @@
 {% from "shuup/front/macros/general.jinja" import render_field with context %}
 
 {% macro render_form() %}
-    <form role="form" method="post" action="{{ url('shuup:checkout', phase="payment") }}">
-    {% csrf_token %}
-    {{ caller() }}
-    </form>
+<!--    <form role="form" method="post" action="{{ url('shuup:checkout', phase="payment") }}">-->
+<!--        {% csrf_token %}-->
+        {{ caller() }}
+<!--    </form>-->
 {% endmacro %}
 
 
@@ -19,21 +19,179 @@
             {% else %}
                 <p>{% trans %}Click the button below to enter your card details.{% endtrans %}</p>
             {% endif %}
-            <script
-                src="https://checkout.stripe.com/checkout.js"
-                class="stripe-button"
-                data-key="{{ stripe.publishable_key }}"
-                data-amount="{{ stripe.amount }}"
-                data-name="{{ stripe.name }}"
-                data-currency="{{ stripe.currency }}"
-                data-description="{{ stripe.description }}"
-            ></script>
+        <script src="https://js.stripe.com/v3/"></script>
+
+       <form id="payment-form" class="sr-payment-form">
+          <div class="sr-combo-inputs-row">
+            <div class="sr-input sr-card-element" id="card-element"></div>
+          </div>
+          <div class="sr-field-error" id="card-errors" role="alert"></div>
+          <button id="submit">
+            <div class="spinner hidden" id="spinner"></div>
+            <span id="button-text">Pagar</span><span id="order-amount"></span>
+          </button>
+        </form>
+        <form id ="payment-completed" role="form" method="post" action="{{ url('shuup:checkout', phase='payment') }}">
+            {% csrf_token %}
+            <input type="hidden" name="paymentIntentId" id="paymentIntentId"/>
+        </form>
+
+         <div class="sr-result hidden">
+          <p>Payment completed<br/></p>
+          <pre>
+            <code></code>
+          </pre>
+        </div>
+        <script type="text/javascript">
+            var stripe
+            var orderData = {
+              currency: '{{ stripe.currency }}'
+            }
+
+            // A reference to Stripe.js initialized with your real test publishable API key.
+            var setupElements = function() {
+              stripe = Stripe('{{ stripe.publishable_key }}')
+              /* ------- Set up Stripe Elements to use in checkout form ------- */
+              var elements = stripe.elements()
+              var style = {
+                base: {
+                  color: '#32325d',
+                  fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                  fontSmoothing: 'antialiased',
+                  fontSize: '16px',
+                  '::placeholder': {
+                    color: '#aab7c4'
+                  }
+                },
+                invalid: {
+                  color: '#fa755a',
+                  iconColor: '#fa755a'
+                }
+              }
+
+              var card = elements.create('card', { style: style })
+              card.mount('#card-element')
+
+              return {
+                stripe: stripe,
+                card: card,
+                clientSecret: '{{ clientSecret }}'
+              }
+            }
+
+            let data = setupElements()
+
+            var form = document.getElementById('payment-form')
+            form.addEventListener('submit', function(event) {
+              event.preventDefault()
+              pay(data['stripe'], data['card'], data['clientSecret'])
+            })
+
+            var handleAction = function(clientSecret) {
+              stripe.handleCardAction(clientSecret).then(function(data) {
+                if (data.error) {
+                  showError('Your card was not authenticated, please try again')
+                } else if (data.paymentIntent.status === 'requires_confirmation') {
+                  fetch('/customer/create-payment-intent/', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': '{{csrf_token}}'
+                    },
+                    body: JSON.stringify({
+                      paymentIntentId: data.paymentIntent.id
+                    })
+                  }).then(function(result) {
+                    return result.json()
+                  }).then(function(json) {
+                    if (json.error) {
+                      showError(json.error)
+                    } else {
+                      orderComplete(clientSecret)
+                    }
+                  })
+                }
+              })
+            }
+
+            /*
+             * Collect card details and pay for the order
+             */
+            var pay = function(stripe, card) {
+              changeLoadingState(true)
+
+              // Collects card details and creates a PaymentMethod
+              stripe.createPaymentMethod('card', card).then(function(result) {
+                if (result.error) {
+                  showError(result.error.message)
+                } else {
+                  orderData.paymentMethodId = result.paymentMethod.id
+
+                  return fetch('/customer/create-payment-intent/', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': '{{csrf_token}}'
+                    },
+                    body: JSON.stringify(orderData)
+                  })
+                }
+              }).then(function(result) {
+                return result.json()
+              }).then(function(response) {
+                if (response.error) {
+                  showError(response.error)
+                } else if (response.requiresAction) {
+                  // Request authentication
+                  handleAction(response.clientSecret)
+                } else {
+                  orderComplete(response.clientSecret)
+                }
+              })
+            }
+
+            /* ------- Post-payment helpers ------- */
+
+            /* Shows a success / error message when the payment is complete */
+            var orderComplete = function(clientSecret) {
+              stripe.retrievePaymentIntent(clientSecret).then(function(result) {
+                var paymentIntent = result.paymentIntent
+                // var paymentIntentJson = JSON.stringify(paymentIntent, null, 2)
+
+                var form = document.getElementById('payment-completed')
+                document.getElementById('paymentIntentId').value = paymentIntent.id
+                form.submit()
+              })
+            }
+
+            var showError = function(errorMsgText) {
+              changeLoadingState(false)
+              var errorMsg = document.querySelector('.sr-field-error')
+              errorMsg.textContent = errorMsgText
+              setTimeout(function() {
+                errorMsg.textContent = ''
+              }, 4000)
+            }
+
+            // Show a spinner on payment submission
+            var changeLoadingState = function(isLoading) {
+              if (isLoading) {
+                document.querySelector('button').disabled = true
+                document.querySelector('#spinner').classList.remove('hidden')
+                document.querySelector('#button-text').classList.add('hidden')
+              } else {
+                document.querySelector('button').disabled = false
+                document.querySelector('#spinner').classList.add('hidden')
+                document.querySelector('#button-text').classList.remove('hidden')
+              }
+            }
+        </script>
         {% endcall %}
     </div>
 </div>
-{% endmacro %}
+        {% endmacro %}
 
-{% macro render_saved_stripe_payment() %}
+        {% macro render_saved_stripe_payment() %}
 <div class="panel panel-default">
     <div class="panel-body">
         {% set custom_message = stripe_utils.get_checkout_saved_card_message() %}
@@ -45,9 +203,9 @@
         {% for data in stripe_customer_data.sources.data %}
             {% call render_form() %}
                 <div class="text-center">
-                    <input type="hidden" name="stripeCustomer" value="{{ stripe_customer_data.id }}" />
+                    <input type="hidden" name="stripeCustomer" value="{{ stripe_customer_data.id }}"/>
                     {% if customer and customer.email %}
-                        <input type="hidden" name="stripeEmail" value="{{ customer.email }}" />
+                        <input type="hidden" name="stripeEmail" value="{{ customer.email }}"/>
                     {% endif %}
                     <button type="submit" class="stripe-button-el">
                         <span>
@@ -69,9 +227,9 @@
         {% endfor %}
     </div>
 </div>
-{% endmacro %}
+        {% endmacro %}
 
-{% block checkout_phase_content %}
+        {% block checkout_phase_content %}
     <div class="row">
     {% set has_saved_customer_data = (stripe_customer_data and stripe_customer_data.sources and stripe_customer_data.sources.data) %}
         <div class="col-xs-12 text-center">
@@ -89,4 +247,4 @@
             <div class="col-md-12 text-center">{{ render_stripe_payment() }}</div>
         {% endif %}
     </div>
-{% endblock %}
+        {% endblock %}

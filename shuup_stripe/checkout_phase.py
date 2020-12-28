@@ -7,6 +7,7 @@
 # LICENSE file in the root directory of this source tree.
 from logging import getLogger
 
+import stripe
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
@@ -17,7 +18,7 @@ from shuup.utils.excs import Problem
 
 from shuup_stripe.models import StripeCustomer
 
-from .checkout_forms import StripeTokenForm
+from .checkout_forms import StripeTokenForm, StripePaymentIntentForm
 from .models import StripeCheckoutPaymentProcessor
 from .utils import get_amount_info, get_checkout_phase_title
 
@@ -28,7 +29,7 @@ class StripeCheckoutPhase(CheckoutPhaseViewMixin, FormView):
     service = None  # Injected by the method phase
     identifier = "stripe"
     template_name = "shuup/stripe/checkout_phase.jinja"
-    form_class = StripeTokenForm
+    form_class = StripePaymentIntentForm
 
     @property
     def title(self):
@@ -73,14 +74,14 @@ class StripeCheckoutPhase(CheckoutPhaseViewMixin, FormView):
         return context
 
     def is_valid(self):
-        return "token" in self.storage.get("stripe", {})
+        return "paymentIntentId" in self.storage.get("stripe", {})
 
     def form_valid(self, form):
         self.storage["stripe"] = {
-            "token": form.cleaned_data.get("stripeToken"),
-            "token_type": form.cleaned_data.get("stripeTokenType"),
-            "email": form.cleaned_data.get("stripeEmail"),
-            "customer": form.cleaned_data.get("stripeCustomer")
+            "paymentIntentId": form.cleaned_data.get("paymentIntentId"),
+            # "token_type": form.cleaned_data.get("stripeTokenType"),
+            # "email": form.cleaned_data.get("stripeEmail"),
+            # "customer": form.cleaned_data.get("stripeCustomer")
         }
         return super(StripeCheckoutPhase, self).form_valid(form)
 

@@ -22,3 +22,8 @@ class StripeTokenForm(forms.Form):
             raise forms.ValidationError(_("Either token or customer should be informed."))
 
         return data
+
+
+class StripePaymentIntentForm(forms.Form):
+    # We're using camel case here only because that's what Stripe does
+    paymentIntentId = forms.CharField(widget=forms.HiddenInput, required=True)

@@ -5,12 +5,13 @@
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import json
 from logging import getLogger
 
 import stripe
 from django.contrib import messages
 from django.http import Http404
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.encoding import force_text
@@ -82,6 +83,54 @@ class StripeSavedPaymentInfoView(DashboardViewMixin, TemplateView):
                 pass
 
         return context
+
+
+class StripeCreatePaymentIntentView(DashboardViewMixin, TemplateView):
+    def post(self, request, *args, **kwargs):
+        stripe_processor = get_stripe_processor(request)
+        try:
+            stripe.api_key = stripe_processor.secret_key
+            data = json.loads(request.body)
+            if 'paymentMethodId' in data:
+                # Create new PaymentIntent with a PaymentMethod ID from the client.
+                intent = stripe.PaymentIntent.create(
+                    **get_amount_info(self.request.basket.taxful_total_price),
+                    payment_method=data['paymentMethodId'],
+                    confirmation_method='manual',
+                    capture_method='manual',
+                    confirm=True,
+                    # If a mobile client passes `useStripeSdk`, set `use_stripe_sdk=true`
+                    # to take advantage of new authentication features in mobile SDKs.
+                    use_stripe_sdk=True if 'useStripeSdk' in data and data['useStripeSdk'] else None,
+                )
+                # After create, if the PaymentIntent's status is succeeded, fulfill the order.
+            elif 'paymentIntentId' in data:
+                # Confirm the PaymentIntent to finalize payment after handling a required action
+                # on the client.
+                intent = stripe.PaymentIntent.confirm(data['paymentIntentId'])
+                # After confirm, if the PaymentIntent's status is succeeded, fulfill the order.
+
+            return self.generate_response(intent)
+        except stripe.error.CardError as e:
+            return JsonResponse(data={'error': str(e.user_message)})
+
+    def generate_response(self, intent):
+        status = intent['status']
+        if status == 'requires_action' or status == 'requires_source_action':
+            # Card requires authentication
+            return JsonResponse(
+                {'requiresAction': True, 'paymentIntentId': intent['id'], 'clientSecret': intent['client_secret']})
+        elif status == 'requires_payment_method' or status == 'requires_source':
+            # Card was not properly authenticated, suggest a new payment method
+            return JsonResponse(data={'error': 'Your card was denied, please provide a new payment method'})
+        elif status == 'succeeded':
+            # Payment is complete, authentication not required
+            # To cancel the payment you will need to issue a Refund (https://stripe.com/docs/api/refunds)
+            print("💰 Payment received!")
+            return JsonResponse({'clientSecret': intent['client_secret']})
+        else:
+            print("Payment status", status)
+            return JsonResponse({'clientSecret': intent['client_secret']})
 
 
 class StripeDeleteSavedPaymentInfoView(View):

@@ -33,44 +33,27 @@ class StripeCharger(object):
         self.order = order
 
     def _send_request(self):
-        stripe_token = self.order.payment_data["stripe"].get("token")
         stripe_customer = self.order.payment_data["stripe"].get("customer")
+        payment_intent_id = self.order.payment_data["stripe"].get("paymentIntentId")
         input_data = {
             "description": _("Payment for order {id} on {shop}").format(
                 id=self.order.identifier, shop=self.order.shop,
             )
         }
-        if stripe_token:
-            input_data["source"] = stripe_token
-        elif stripe_customer:
+        if stripe_customer:
             input_data["customer"] = stripe_customer
 
         input_data.update(get_amount_info(self.order.taxful_total_price))
 
         stripe.api_key = self.secret_key
-        return stripe.PaymentIntent.create(
-            **input_data,
-            confirm=True,
-            payment_method_types=["card"],
-        )
-        # from shuup.utils.http import retry_request
-        # return retry_request(
-        #     method="post",
-        #     url="https://api.stripe.com/v1/charges",
-        #     data=input_data,
-        #     auth=(self.secret_key, ""),
-        #     headers={
-        #         "Idempotency-Key": self.order.key,
-        #         "Stripe-Version": "2015-04-07"
-        #     }
-        # )
+        return stripe.PaymentIntent.capture(payment_intent_id)
 
-    def create_payment_intent(self):
+    def create_payment(self):
         resp = self._send_request()
         payment_intent_data = resp.json() if hasattr(resp, "json") else resp
         _handle_stripe_error(payment_intent_data)
-        status =payment_intent_data.get("status", False)
-        if not status or 'status' != 'succeeded':
+        status = payment_intent_data.get("status", False)
+        if not status or status != 'succeeded':
             raise Problem(_("Stripe status is not 'succeeded'"))
 
         return self.order.create_payment(

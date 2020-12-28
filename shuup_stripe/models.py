@@ -24,13 +24,23 @@ class StripeCheckoutPaymentProcessor(PaymentProcessor):
             for stripe_charger in stripe_chargers
         ]
 
+    def get_payment_process_response(self, service, order, urls):
+        if not order.is_paid():
+            stripe_chargers = get_provide_objects("stripe_charger")
+            for stripe_charger in stripe_chargers:
+                if stripe_charger.identifier == service.choice_identifier:
+                    charger = stripe_charger(order=order, secret_key=self.secret_key)
+                    charger.create_payment()
+        return super(StripeCheckoutPaymentProcessor, self).get_payment_process_response(service, order, urls)
+
     def process_payment_return_request(self, service, order, request):
         if not order.is_paid():
             stripe_chargers = get_provide_objects("stripe_charger")
             for stripe_charger in stripe_chargers:
                 if stripe_charger.identifier == service.choice_identifier:
                     charger = stripe_charger(order=order, secret_key=self.secret_key)
-                    charger.create_payment_intent()
+                    charger.create_payment()
+        super(StripeCheckoutPaymentProcessor, self).process_payment_return_request(service, order, request)
 
 
 class StripeCustomer(models.Model):
