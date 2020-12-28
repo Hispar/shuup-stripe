@@ -26,7 +26,7 @@
             <div class="sr-input sr-card-element" id="card-element"></div>
           </div>
           <div class="sr-field-error" id="card-errors" role="alert"></div>
-          <button id="submit">
+          <button id="submit" class="btn">
             <div class="spinner hidden" id="spinner"></div>
             <span id="button-text">Pagar</span><span id="order-amount"></span>
           </button>
@@ -55,7 +55,7 @@
               var elements = stripe.elements()
               var style = {
                 base: {
-                  color: '#32325d',
+                  color: '#ffffff',
                   fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
                   fontSmoothing: 'antialiased',
                   fontSize: '16px',
@@ -177,12 +177,14 @@
             var changeLoadingState = function(isLoading) {
               if (isLoading) {
                 document.querySelector('button').disabled = true
+                document.getElementById('submit').classList.add('hidden')
                 document.querySelector('#spinner').classList.remove('hidden')
                 document.querySelector('#button-text').classList.add('hidden')
               } else {
                 document.querySelector('button').disabled = false
                 document.querySelector('#spinner').classList.add('hidden')
                 document.querySelector('#button-text').classList.remove('hidden')
+                document.getElementById('submit').classList.remove('hidden')
               }
             }
         </script>
